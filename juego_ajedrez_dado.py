@@ -174,7 +174,7 @@ def get_valid_moves(piece, board, move_type):
             c += dc
     return moves
 
-def draw_ui(win, dice_result, current_turn, game_over, winner):
+def draw_ui(win, dice_result, current_turn, game_over, winner, has_rolled):
     pygame.draw.rect(win, BLACK, (0, HEIGHT, WIDTH, UI_HEIGHT))
 
     if game_over:
@@ -185,48 +185,65 @@ def draw_ui(win, dice_result, current_turn, game_over, winner):
         restart_rect = restart_text.get_rect(center=(WIDTH // 2, HEIGHT + UI_HEIGHT // 2 + 20))
         win.blit(restart_text, restart_rect)
         pygame.draw.rect(win, YELLOW, restart_rect.inflate(20, 10), 2)
-        return restart_rect.inflate(20, 10)
+        return restart_rect.inflate(20, 10), None
 
-    # Mostrar texto del dado
+    # Texto del turno y dado
+    turn_text = FONT.render(f"Turno: {'Blancas' if current_turn == 'white' else 'Negras'}", True, WHITE)
+    win.blit(turn_text, (10, HEIGHT + 10))
+
     if dice_result:
         dice_text = FONT.render(f"Dado: {dice_result.name.capitalize()}", True, WHITE)
-        win.blit(dice_text, (10, HEIGHT + 10))
-        # Mostrar imagen correspondiente al jugador actual
+        win.blit(dice_text, (10, HEIGHT + 40))
         icon = DICE_ICONS[current_turn][dice_result]
-        win.blit(icon, (150, HEIGHT + 5))
+        win.blit(icon, (150, HEIGHT + 35))
     else:
         dice_text = FONT.render("Dado: ---", True, WHITE)
-        win.blit(dice_text, (10, HEIGHT + 10))
-
-    turn_text = FONT.render(f"Turno: {'Blancas' if current_turn == 'white' else 'Negras'}", True, WHITE)
-    win.blit(turn_text, (10, HEIGHT + 40))
+        win.blit(dice_text, (10, HEIGHT + 40))
 
     # Botón reiniciar
-    restart_text = FONT.render("Reiniciar", True, WHITE)
-    restart_rect = pygame.Rect(WIDTH - 100, HEIGHT + 30, 80, 30)
+    restart_rect = pygame.Rect(WIDTH - 100, HEIGHT + 20, 80, 30)
     pygame.draw.rect(win, GREY, restart_rect)
     pygame.draw.rect(win, WHITE, restart_rect, 2)
-    win.blit(restart_text, (WIDTH - 90, HEIGHT + 35))
+    win.blit(FONT.render("Reiniciar", True, WHITE), (WIDTH - 90, HEIGHT + 27))
 
-    return restart_rect
+    # Botón lanzar dado
+    dice_rect = pygame.Rect(WIDTH - 200, HEIGHT + 20, 80, 30)
+    pygame.draw.rect(win, GREEN if not has_rolled else GREY, dice_rect)
+    pygame.draw.rect(win, WHITE, dice_rect, 2)
+    win.blit(FONT.render("Lanzar", True, WHITE), (WIDTH - 185, HEIGHT + 27))
+
+    return restart_rect, dice_rect
 
 def draw_board(win, board, selected_piece, valid_moves):
+    # Dibujar fondo del tablero
     for row in range(ROWS):
         for col in range(COLS):
             color = LIGHT_BROWN if (row + col) % 2 == 0 else DARK_BROWN
             pygame.draw.rect(win, color, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
+    # Dibujar primero las fichas enemigas sobre casillas marcadas como captura
     if selected_piece:
-        pygame.draw.rect(win, YELLOW, (selected_piece.col*SQUARE_SIZE, selected_piece.row*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
         for move in valid_moves:
-            pygame.draw.circle(win, YELLOW,
-                               (move[1]*SQUARE_SIZE + SQUARE_SIZE//2, move[0]*SQUARE_SIZE + SQUARE_SIZE//2),
-                               8)
+            r, c = move
+            if board[r][c] and board[r][c].color != selected_piece.color:
+                # Dibujar marco rojo sobre ficha capturable
+                pygame.draw.rect(win, RED, (c * SQUARE_SIZE + 4, r * SQUARE_SIZE + 4, SQUARE_SIZE - 8, SQUARE_SIZE - 8), 4)
 
+    # Dibujar todas las piezas normalmente
     for row in board:
         for piece in row:
             if piece:
                 piece.draw(win)
+
+    # Resaltado de selección y movimientos válidos
+    if selected_piece:
+        # Casilla de pieza seleccionada
+        pygame.draw.rect(win, YELLOW, (selected_piece.col*SQUARE_SIZE, selected_piece.row*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 3)
+        for move in valid_moves:
+            r, c = move
+            if not board[r][c]:
+                # Casilla vacía: círculo amarillo
+                pygame.draw.circle(win, YELLOW, (c*SQUARE_SIZE + SQUARE_SIZE//2, r*SQUARE_SIZE + SQUARE_SIZE//2), 10)
 
 def reset_game():
     return {
@@ -250,31 +267,38 @@ def run_game():
         clock.tick(FPS)
         WIN.fill(BLACK)
         draw_board(WIN, state["board"], state["selected_piece"], state["valid_moves"])
-        restart_button = draw_ui(WIN, state["dice_result"], state["current_turn"], state["game_over"], state["winner"])
+        restart_button, dice_button = draw_ui(WIN, state["dice_result"], state["current_turn"], state["game_over"], state["winner"], state["has_rolled"])
         pygame.display.update()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
 
+            # Pantalla de victoria
             if state["game_over"]:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if restart_button.collidepoint(pygame.mouse.get_pos()):
                         state = reset_game()
                 continue
 
-            if event.type == pygame.KEYDOWN and not state["has_rolled"]:
-                if event.key == pygame.K_r:
+            # Click del mouse
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+
+                # Botón reiniciar
+                if restart_button.collidepoint((mx, my)):
+                    state = reset_game()
+                    continue
+
+                # Botón lanzar dado
+                if dice_button and dice_button.collidepoint((mx, my)) and not state["has_rolled"]:
                     state["dice_result"] = state["dice"].roll()
                     state["has_rolled"] = True
                     state["selected_piece"] = None
                     state["valid_moves"] = []
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                mx, my = pygame.mouse.get_pos()
-                if restart_button.collidepoint((mx, my)):
-                    state = reset_game()
                     continue
+
+                # Clic sobre el tablero
                 if my >= HEIGHT:
                     continue
                 row, col = my // SQUARE_SIZE, mx // SQUARE_SIZE
@@ -293,6 +317,7 @@ def run_game():
                     state["has_rolled"] = False
                     state["dice_result"] = None
                     state["current_turn"] = "black" if state["current_turn"] == "white" else "white"
+
                 elif piece and piece.color == state["current_turn"]:
                     if piece.is_king or (state["dice_result"] and not piece.is_king):
                         state["selected_piece"] = piece
