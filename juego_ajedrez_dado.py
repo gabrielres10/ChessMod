@@ -26,10 +26,10 @@ GOLD = (255, 223, 0)
 
 # Cargar imágenes de piezas
 IMAGES = {
-    "white_soldier": pygame.image.load("assets/soldier_white.svg"),
-    "black_soldier": pygame.image.load("assets/soldier_black.svg"),
-    "white_king": pygame.image.load("assets/king_white.svg"),
-    "black_king": pygame.image.load("assets/king_black.svg")
+    "white_soldier": pygame.image.load("assets/soldier_white.png"),
+    "black_soldier": pygame.image.load("assets/soldier_black.png"),
+    "white_king": pygame.image.load("assets/king_white.png"),
+    "black_king": pygame.image.load("assets/king_black.png")
 }
 
 # Escalar imágenes al tamaño de casilla
@@ -55,18 +55,18 @@ class MoveType(Enum):
 # Cargar íconos visuales para el dado según color
 DICE_ICONS = {
     "white": {
-        MoveType.PEON: pygame.image.load("assets/peon_blanco.svg"),
-        MoveType.TORRE: pygame.image.load("assets/torre_blanco.svg"),
-        MoveType.CABALLO: pygame.image.load("assets/caballo_blanco.svg"),
-        MoveType.ALFIL: pygame.image.load("assets/alfil_blanco.svg"),
-        MoveType.REINA: pygame.image.load("assets/reina_blanco.svg"),
+        MoveType.PEON: pygame.image.load("assets/peon_blanco.png"),
+        MoveType.TORRE: pygame.image.load("assets/torre_blanco.png"),
+        MoveType.CABALLO: pygame.image.load("assets/caballo_blanco.png"),
+        MoveType.ALFIL: pygame.image.load("assets/alfil_blanco.png"),
+        MoveType.REINA: pygame.image.load("assets/reina_blanco.png"),
     },
     "black": {
-        MoveType.PEON: pygame.image.load("assets/peon_negro.svg"),
-        MoveType.TORRE: pygame.image.load("assets/torre_negro.svg"),
-        MoveType.CABALLO: pygame.image.load("assets/caballo_negro.svg"),
-        MoveType.ALFIL: pygame.image.load("assets/alfil_negro.svg"),
-        MoveType.REINA: pygame.image.load("assets/reina_negro.svg"),
+        MoveType.PEON: pygame.image.load("assets/peon_negro.png"),
+        MoveType.TORRE: pygame.image.load("assets/torre_negro.png"),
+        MoveType.CABALLO: pygame.image.load("assets/caballo_negro.png"),
+        MoveType.ALFIL: pygame.image.load("assets/alfil_negro.png"),
+        MoveType.REINA: pygame.image.load("assets/reina_negro.png"),
     }
 }
 
